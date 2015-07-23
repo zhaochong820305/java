@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.Socket;
+import java.util.Date;
 public class UploadFile {
 
 	/**
@@ -15,26 +16,42 @@ public class UploadFile {
 		// TODO
 		try
 		{
-			Socket so = new Socket("172.24.0.122",9026);
+			Socket so = new Socket("127.0.0.1",9026);
 			BufferedReader br = new BufferedReader(
 					new InputStreamReader(so.getInputStream()));
 			PrintStream ps = new PrintStream(so.getOutputStream());
 			File file = getFile();
-			int ilen = ("|"+file.getName()+"|"+file.length()+"|").length();
-			String slen ="";
-			if(ilen<10)
+			String slen=Integer.toHexString((int) file.length());
+			
+			if(slen.length()>8)
 			{
-				slen="0"+ilen;
-			}
-			else if(ilen > 99)				
-			{
-				System.out.println("file is name len is long");
+				System.out.println("file is too len");
 				return;
-			}else
-			{
-				slen=""+ilen;
 			}
-			String str = "ABAC"+slen+"|"+file.getName()+"|"+file.length()+"|";
+			
+			slen = addZeroForNum(slen, 8);
+			
+			String sname = file.getName();
+			if(sname.length()>20)
+			{
+				System.out.println("file name is too long");
+			}
+			sname = addZeroForNum(sname,20);
+//			int ilen = ("|"+file.getName()+"|"+slen+"|").length();
+//			String slen ="";
+//			if(ilen<10)
+//			{
+//				slen="0"+ilen;
+//			}
+//			else if(ilen > 99)				
+//			{
+//				System.out.println("file is name len is long");
+//				return;
+//			}else
+//			{
+//				slen=""+ilen;
+//			}
+			String str = "ABAC"+"|"+slen+"|0|"+sname+"|";
 			byte[] byBuffer = new byte[200];
 			byBuffer= str.getBytes();
 			OutputStream out1 = so.getOutputStream();
@@ -48,7 +65,8 @@ public class UploadFile {
 			FileInputStream fis = new FileInputStream(file);
 			byte[] buffers  = new byte[3];
 			byte[] buffer  = new byte[1024];
-			//String msg =""+ fis.read(buffers);//.//so.read(buffer);
+			
+			//String msg =""so.+ fis.read(buffers);//.//so.read(buffer);
 			//if(msg.equals("exi"))
 			//{
 			//	System.out.println("the file is exist,thie file is not upload");
@@ -77,6 +95,20 @@ public class UploadFile {
 			
 			System.out.println("file upload error");	
 		}
+	}
+	public static String addZeroForNum(String str, int strLength) {
+	    int strLen = str.length();
+	    if (strLen < strLength) {
+	        while (strLen < strLength) {
+	            StringBuffer sb = new StringBuffer();
+	            sb.append("0").append(str);// 左补0
+	            // sb.append(str).append("0");//右补0
+	            str = sb.toString();
+	            strLen = str.length();
+	        }
+	    }
+
+	    return str;
 	}
 	
 	public static File getFile()

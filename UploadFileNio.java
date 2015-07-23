@@ -54,38 +54,39 @@ public class UploadFileNio {
 				 
 					Iterator it = selector.selectedKeys().iterator();
 				 
-				 
-				// Look at each key in the selected set while (it.hasNext()) {
-				SelectionKey key = (SelectionKey) it.next();
-	
-				// step1 Is a new connection coming in?
-				if (key.isAcceptable()) {
-				//if((key.readyOps()& SelectionKey.OP_ACCEPT)==SelectionKey.OP_ACCEPT){
-					iconn++;
-					ServerSocketChannel server = (ServerSocketChannel) key.channel();
-					SocketChannel channel = server.accept();
-					registerChannel(selector, channel, SelectionKey.OP_READ);
-					//Socket socket = channel.socket(); 
-					System.out.println("the clent:"+"["+ channel.getRemoteAddress()+"]");
-					sayHello(channel, iconn);
-					
+				while(it.hasNext()) {
+ 
+					// Look at each key in the selected set while (it.hasNext()) {
+					SelectionKey key = (SelectionKey) it.next();
+		
+					// step1 Is a new connection coming in?
+					if (key.isAcceptable()) {
+					//if((key.readyOps()& SelectionKey.OP_ACCEPT)==SelectionKey.OP_ACCEPT){
+						iconn++;
+						ServerSocketChannel server = (ServerSocketChannel) key.channel();
+						SocketChannel channel = server.accept();
+						registerChannel(selector, channel, SelectionKey.OP_READ);
+						//Socket socket = channel.socket(); 
+						System.out.println("the clent:"+"["+ channel.getRemoteAddress()+"]");
+						sayHello(channel, iconn);
+						
+					}
+		
+					// step2 Is there data to read on this channel?
+					if( key.isReadable()){
+					//else if( (key.readyOps()& SelectionKey.OP_READ) == SelectionKey.OP_READ){
+						//ServerSocketChannel server = (ServerSocketChannel) key
+						//		.channel();
+						//SocketChannel channel1 = server.accept();
+						//registerChannel(selector, channel1, SelectionKey.OP_READ);
+						//readDataFromSocket(key);
+						//readDataFile(key);
+						receive(key);
+					}
+		
+					// step3 Remove key from selected set; it's been handled
+					it.remove();
 				}
-	
-				// step2 Is there data to read on this channel?
-				if( key.isReadable()){
-				//else if( (key.readyOps()& SelectionKey.OP_READ) == SelectionKey.OP_READ){
-					//ServerSocketChannel server = (ServerSocketChannel) key
-					//		.channel();
-					//SocketChannel channel1 = server.accept();
-					//registerChannel(selector, channel1, SelectionKey.OP_READ);
-					//readDataFromSocket(key);
-					//readDataFile(key);
-					receive(key);
-				}
-	
-				// step3 Remove key from selected set; it's been handled
-				it.remove();
-	
 			}
 		}catch (Exception ex)
 		
@@ -114,42 +115,42 @@ public class UploadFileNio {
 		SocketChannel socketChannel = (SocketChannel)key.channel();
 		try{
 			
-			ByteBuffer readBuf = ByteBuffer.allocate(6);
+			ByteBuffer readBuf = ByteBuffer.allocate(4);
 			socketChannel.read(readBuf);
 			
 			String fileName="";  
 			long fileLen=0 ; 
-			int filenamelen=0;
+			//int filenamelen=0;
 			readBuf.flip();
 			String str = getString(readBuf);
 			if(str.substring(0,4).equals("ABAC"))
 			{
-				try
-				{
-					filenamelen = (int) Long.parseLong(str.substring(4,6));
-				}
-				catch(Exception ex)
-				{
-					prints("file name is len error");
-					return;
-				}
+//				try
+//				{
+//					filenamelen = (int) Long.parseLong(str.substring(4,6));
+//				}
+//				catch(Exception ex)
+//				{
+//					prints("file name is len error");
+//					return;
+//				}
 				readBuf.clear();
 				
-				readBuf = ByteBuffer.allocate(filenamelen);
+				readBuf = ByteBuffer.allocate(33);
 				socketChannel.read(readBuf);
 				readBuf.flip();
 				str = getString(readBuf);
 				
 				readBuf.flip();
-				   String[]  sArray = str.split("\\|");
-				   int ilen = sArray.length;
+				   String[]  sarray = str.split("\\|");
+				   int ilen = sarray.length;
 				   if (ilen>=3)
 				   {
 					    
-						fileName = sArray[1];
+						fileName = sarray[3].replaceFirst("^0*", ""); ;
 						try
 						{
-							fileLen = Long.parseLong(sArray[2]);
+							fileLen =Integer.parseInt(sarray[1],16) ;
 						}
 						catch(Exception ex)
 						{
@@ -198,6 +199,7 @@ public class UploadFileNio {
 						
 						prints("");
 						prints(directory+"\\"+fileName+" the file is finish@");
+						fos.close();
 						//socketChannel.write(getByteBuffer("upload finish is true"));
 				   }
 			}
