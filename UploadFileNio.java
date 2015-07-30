@@ -136,21 +136,22 @@ public class UploadFileNio {
 //				}
 				readBuf.clear();
 				
-				readBuf = ByteBuffer.allocate(33);
+				readBuf = ByteBuffer.allocate(30);
 				socketChannel.read(readBuf);
 				readBuf.flip();
 				str = getString(readBuf);
 				
 				readBuf.flip();
-				   String[]  sarray = str.split("\\|");
-				   int ilen = sarray.length;
-				   if (ilen>=3)
+				   //String[]  sarray = str.split("\\|");
+				   int ilen = str.length();
+				   if (ilen==30)
 				   {
 					    
-						fileName = sarray[3].replaceFirst("^0*", ""); ;
+						fileName =str.substring(10,30); 
+						fileName = fileName.replaceFirst("^0*", "");
 						try
 						{
-							fileLen =Integer.parseInt(sarray[1],16) ;
+							fileLen =Integer.parseInt(str.substring(0,8),16) ;
 						}
 						catch(Exception ex)
 						{
@@ -193,7 +194,7 @@ public class UploadFileNio {
 								b--;
 							}
 							prints("this is finish:"+(int)(byteRead*100/byteAll)+"%");
-							b=("finish:"+String.valueOf((int)(byteRead*100/byteAll))+"%.").getBytes().length;
+							//b=("finish:"+String.valueOf((int)(byteRead*100/byteAll))+"%.").getBytes().length;
 							
 						}
 						
