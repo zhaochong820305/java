@@ -115,15 +115,15 @@ public class UploadFileNio {
 		SocketChannel socketChannel = (SocketChannel)key.channel();
 		try{
 			
-			ByteBuffer readBuf = ByteBuffer.allocate(4);
-			socketChannel.read(readBuf);
+			//ByteBuffer readBuf = ByteBuffer.allocate(4);
+			//socketChannel.read(readBuf);
 			
 			String fileName="";  
 			long fileLen=0 ; 
 			//int filenamelen=0;
-			readBuf.flip();
-			String str = getString(readBuf);
-			if(str.substring(0,4).equals("ABAC"))
+			//readBuf.flip();
+			//String str = getString(readBuf);
+			//if(str.substring(0,4).equals("ABAC"))
 			{
 //				try
 //				{
@@ -134,12 +134,12 @@ public class UploadFileNio {
 //					prints("file name is len error");
 //					return;
 //				}
-				readBuf.clear();
+				//readBuf.clear();
 				
-				readBuf = ByteBuffer.allocate(30);
+				ByteBuffer readBuf = ByteBuffer.allocate(30);
 				socketChannel.read(readBuf);
 				readBuf.flip();
-				str = getString(readBuf);
+				String str = getString(readBuf);
 				
 				readBuf.flip();
 				   //String[]  sarray = str.split("\\|");
@@ -204,13 +204,13 @@ public class UploadFileNio {
 						//socketChannel.write(getByteBuffer("upload finish is true"));
 				   }
 			}
-			else 
-			{
-				socketChannel.close();
-				key.cancel();
-				prints("exit run");
-				System.exit(0);
-			}
+//			else 
+//			{
+//				socketChannel.close();
+//				key.cancel();
+//				prints("exit run");
+//				System.exit(0);
+//			}
 		}
 		catch(Exception ex)
 		{
