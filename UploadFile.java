@@ -54,13 +54,13 @@ public class UploadFile {
 //			{
 //				slen=""+ilen;
 //			}
-			String str = "ABAC"+slen+"00"+sname+"";
+			String str = ""+slen+"00"+sname+"";
 			byte[] byBuffer = new byte[200];
-			//byBuffer= str.getBytes();
-			//OutputStream out1 = so.getOutputStream();
+			byBuffer= str.getBytes();
+	        OutputStream out1 = so.getOutputStream();
 			//ps.println("ABAC1"+file.getName()+"|"+file.length());
-			ps.println(str);
-			//out1.write(byBuffer,0,byBuffer.length);
+			//ps.println(str);
+			out1.write(byBuffer,0,byBuffer.length);
 			
 			//ps.print
 			//ps.println(file.length());
