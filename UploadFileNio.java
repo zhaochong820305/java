@@ -168,14 +168,14 @@ public class UploadFileNio {
 						
 						FileChannel foc = fos.getChannel();
 						foc.position(0);
-						ByteBuffer buffer = ByteBuffer.allocate(1024*1024);
+						ByteBuffer buffer = ByteBuffer.allocate(1024*10);
 						prints("this is receiving file");
 						double byteRead=0;
 						int byteAll =(int)fileLen;
 						int b=0;
 						while(fileLen>0)
 						{
-							if(fileLen<1024*1024)
+							if(fileLen<1024*10)
 							{
 								buffer = ByteBuffer.allocate((int)fileLen);
 							}
