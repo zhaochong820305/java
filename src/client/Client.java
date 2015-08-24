@@ -3,43 +3,8 @@ import java.io.FileInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 
-/*
- *  +------------+------+-------------+
- *  |    len     | type | packet body |
- *  +------------+------+-------------+
- *  |  4 byte    |   2  |   len - 6   |
- *  |  header(6 bytes)  |     body    |
- *
- * header len: 4 + 2 = 6
- *
- * packet body len: packet len - 6
- *
- * packet type: 0 -- file name
- *              1 -- file length
- *              3 -- file content
- *
- * */
-
 
 public class Client {
-
-    public final int HEADER_LEN = 6;
-
-    public enum PacketType {
-        FILE_NAME((short)0),
-        FILE_LENGTH((short)1),
-        FILE_CONTENT((short)2);
-
-        private short value;
-
-        private PacketType(short value) {
-            this.value = value;
-        }
-
-        public short getValue() {
-            return this.value;
-        }
-    }
 
     public static void main(String[] args) throws Exception {
         Client client = new Client();
@@ -69,9 +34,9 @@ public class Client {
             dos.flush();
 
             //send file content
-            byte[] buf = new byte[1024];
+            byte[] buf = new byte[4096];
             while (true) {
-                int len = fis.read(buf, 0, 1024);
+                int len = fis.read(buf, 0, 4096);
                 if (len <= 0) {
                     break;
                 }
@@ -82,6 +47,12 @@ public class Client {
                 dos.write(buf);
                 dos.flush();
             }
+
+            //send file end flag
+            packetLength = HEADER_LEN;
+            dos.writeInt(packetLength);
+            dos.writeShort(PacketType.FILE_END.getValue());
+            dos.flush();
 
             cli.close();
         } catch (Exception e) {
