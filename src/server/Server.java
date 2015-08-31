@@ -1,17 +1,10 @@
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.SocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.Iterator;
-import java.nio.channels.FileChannel;
+import java.io.IOException;
+import java.util.Set;
 
 public class Server {
     private int port = 9527;
@@ -22,8 +15,13 @@ public class Server {
     }
 
 	public static void main(String args[]) throws Exception {
-        Server srv = new Server(9527);
-        srv.Run();
+        try {
+            Server srv = new Server(9527);
+            srv.init();
+            srv.listen();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 	}
 
     public void init() throws IOException {
@@ -35,7 +33,7 @@ public class Server {
         serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
     }
 
-    void listen() {
+    void listen() throws IOException {
 
         while (true) {
             int readyChannels = selector.select();
@@ -47,14 +45,14 @@ public class Server {
             Set<SelectionKey> selectedKeys = selector.selectedKeys();
             for (SelectionKey key: selectedKeys) {
                 if (key.isAcceptable()) {
-                    ServerSocketChannel serverSocketChannel = key.channel();
+                    ServerSocketChannel serverSocketChannel = (ServerSocketChannel)key.channel();
                     SocketChannel socketChannel = serverSocketChannel.accept();
                     socketChannel.configureBlocking(false);
                     Client client = new Client(socketChannel);
                     SelectionKey clientKey = socketChannel.register(selector, SelectionKey.OP_READ);
                     clientKey.attach(client);
-                } else if (key.isReadable() {
-                    Client client = key.attatchment();
+                } else if (key.isReadable()) {
+                    Client client = (Client)key.attachment();
                     client.execute(key);
                 }
             }

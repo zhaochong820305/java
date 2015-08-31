@@ -3,8 +3,10 @@ import java.io.FileInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 
+import binary.demo.Protocol;
 
-public class Client {
+
+public class Client implements Protocol {
 
     public static void main(String[] args) throws Exception {
         Client client = new Client();

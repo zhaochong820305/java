@@ -1,4 +1,9 @@
-import java.io.FileOutputStream();
+import java.nio.channels.SocketChannel;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.SelectionKey;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 import binary.demo.Protocol;
 import binary.demo.Util;
@@ -7,7 +12,7 @@ public class Client implements Protocol {
     private SocketChannel socketChannel;
     private ByteBuffer header = ByteBuffer.allocate(HEADER_LEN);
     private ByteBuffer body = ByteBuffer.allocate(4096);
-    private Type pcketState = FILE_NAME;
+    private PacketType packetState = PacketType.FILE_NAME;
     private FileChannel curFileChannel;
     private long fileLength;
 
@@ -19,86 +24,101 @@ public class Client implements Protocol {
 
     public void execute(SelectionKey key) {
 
-        if (!key.isReadable) {
-            System.out.println("invalid event type");
-            socketChannel.Close();
-            return;
-        }
+        try {
+            if (!key.isReadable()) {
+                System.out.println("invalid event type");
+                socketChannel.close();
+                return;
+            }
 
-        boolean ok = false;
-        switch (readState) {
-            case 0:
-                ok = readHeader();
-                break;
-            case 1:
-                ok = readBody();
-                break;
-            default:
-                break;
-        }
+            boolean ok = false;
+            switch (readState) {
+                case 0:
+                    ok = readHeader();
+                    break;
+                case 1:
+                    ok = readBody();
+                    break;
+                default:
+                    break;
+            }
 
-        if (ok) {
-            socketChannel.register(key.selector(), SelectionKey.OP_READ);
-        } else {
-            socketChannel.close();
+            if (ok) {
+                socketChannel.register(key.selector(), SelectionKey.OP_READ);
+            } else {
+                socketChannel.close();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     boolean readHeader() {
         //read packet header
-        int bytes = socketChannel.read(header);
-        if (bytes == -1) {
-            System.out.println("client is closed when read packet header");
-            return false;
-        }
+        try {
+            int bytes = socketChannel.read(header);
+            if (bytes == -1) {
+                System.out.println("client is closed when read packet header");
+                return false;
+            }
 
-        if (header.position() != header.capacity() - 1) {
-            //continue read header
+            if (header.position() != header.capacity() - 1) {
+                //continue read header
+                return true;
+            }
+
+            header.flip();
+
+            //read a complete header, process header
+            int packetLen = header.getInt();
+            if (packetLen > MAX_LEN) {
+                System.out.println("invalid packet len");
+                return false;
+            }
+
+            short packetType = header.getShort();
+            if (packetType != packetState.getValue()) {
+                System.out.println("invalid packet type");
+                return false;
+            }
+
+            body.limit(packetLen);
+            readState = 1; //transform readState to body
+
             return true;
-        }
-
-        header.flip();
-
-        //read a complete header, process header
-        int packetLen = header.getInt();
-        if (packetLen > MAX_LEN) {
-            System.out.println("invalid packet len");
+        } catch (IOException e) {
+            e.printStackTrace();
             return false;
         }
-
-        short packetType = header.getShort();
-        if (packetType != pcketState.getValue()) {
-            System.out.println("invalid packet type");
-            return false;
-        }
-
-        body.limit(packetLen());
-        readState = 1; //transform readState to body
-
-        return true;
     }
 
     boolean readBody() {
-        //read packet body
-        int bytes = socketChannel.read(body);
-        if (bytes == -1) {
-            System.out.println("client is closed when read packet body");
+        try {
+            //read packet body
+            int bytes = socketChannel.read(body);
+            if (bytes == -1) {
+                System.out.println("client is closed when read packet body");
+                return false;
+            }
+
+            if (body.position() != body.capacity() - 1) {
+                //continue to read body
+                return true;
+            }
+
+            boolean ok = processBody();
+
+            //switch to read header
+            readState = 0;
+            header.clear();
+            body.clear();
+
+            return ok;
+        } catch (IOException e) {
+            e.printStackTrace();
             return false;
         }
-
-        if (body.position() != body.capacity() - 1) {
-            //continue to read body
-            return true;
-        }
-
-        boolean ok = processBody();
-
-        //switch to read header
-        readState = 0;
-        header.clear();
-        body.clear();
-
-        return ok;
     }
 
     boolean processBody() {
@@ -109,7 +129,7 @@ public class Client implements Protocol {
                 //创建文件
                 ok = processFileName();
                 break;
-            case FILE_LENGHT:
+            case FILE_LENGTH:
                 //记录文件长度
                 ok = processFileLength();
                 break;
@@ -124,7 +144,6 @@ public class Client implements Protocol {
             default:
                 System.out.println("invalid packet state");
                 return false;
-                break;
         }
 
         return ok;
@@ -135,10 +154,10 @@ public class Client implements Protocol {
         String fileName = Util.getString(body);
         try {
             curFileChannel = new FileOutputStream(fileName).getChannel();
-            packetState = FILE_LENGHT; //shit packetState to FILE_LENGTH
+            packetState = PacketType.FILE_LENGTH; //shit packetState to FILE_LENGTH
             return true;
         } catch (IOException e) {
-            e.printStackStrace();
+            e.printStackTrace();
             return false;
         }
     }
@@ -146,28 +165,34 @@ public class Client implements Protocol {
     boolean processFileLength()
     {
         fileLength = body.getLong();
-        packetState = FILE_CONTENT;
+        packetState = PacketType.FILE_CONTENT;
+        return true;
     }
 
     boolean processFileContent()
     {
         try {
             curFileChannel.write(body);
-            packetState = FILE_END;
+            packetState = PacketType.FILE_END;
             return true;
         } catch (IOException e) {
-            e.printStackStrace();
+            e.printStackTrace();
             return false;
         }
     }
 
     boolean processFileEnd() {
-        long length = curFileChannel.size();
-        curFileChannel.close();
-        packetState = FILE_NAME;
+        try {
+            long length = curFileChannel.size();
+            curFileChannel.close();
+            packetState = PacketType.FILE_NAME;
 
-        if (fileLength != curFileChannel.size()) {
-            System.out.println("invalid file length");
+            if (fileLength != curFileChannel.size()) {
+                System.out.println("invalid file length");
+                return false;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
             return false;
         }
 

@@ -28,7 +28,7 @@ public interface Protocol {
     enum PacketType {
         FILE_NAME((short)0),
         FILE_LENGTH((short)1),
-        FILE_CONTENT((short)2);
+        FILE_CONTENT((short)2),
         FILE_END((short)3);
 
         private short value;
@@ -41,7 +41,5 @@ public interface Protocol {
             return this.value;
         }
     }
-
-    void execute(SelectionKey key);
 }
 

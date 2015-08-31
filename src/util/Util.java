@@ -1,5 +1,12 @@
 package binary.demo;
 
+import java.nio.CharBuffer;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+
+
+
 public class Util {
 
     public static ByteBuffer getByteBuffer(String str) {
