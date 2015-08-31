@@ -7,5 +7,36 @@
 7、支持命令行参数
 
 
-命令行参数处理：
-http://blog.csdn.net/faye0412/article/details/2949753
+//////////////////////////////////////////////////////////////
+binary_demo功能演示
+
+示例代码演示了java使用二进制协议进行文件传输的功能。
+
+编译方法：
+make
+
+server运行方法：
+make run_server
+
+client运行方法：
+make run_client
+
+
+目录说明：
+test 目录是上要上传的文件，本例为a.txt
+upload 为目标目录，server将客户端上传的文件存储在 upload 目录下
+
+
+关于打包：
+执行make命令时，将protocol和util打包成jar文件
+
+
+运行环境：
+linux
+
+其它：
+示例代码没有演示守护进程
+没有进行压力测试
+代码中很多调试用的System.out.println语句,做压力测试时需要注释掉
+演示了基本的命令行参数
+代码风格比较统一

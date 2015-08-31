@@ -1,5 +1,12 @@
 package binary.demo;
 
+import java.nio.CharBuffer;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+
+
+
 public class Util {
 
     public static ByteBuffer getByteBuffer(String str) {
@@ -25,4 +32,16 @@ public class Util {
             return "";  
         }  
     }  
+
+    public static void printHexString( byte[] b) {
+        System.out.println(">>>>>>hex output start");
+        for (int i = 0; i < b.length; i++) {
+            String hex = Integer.toHexString(b[i] & 0xFF);
+            if (hex.length() == 1) {
+                hex = '0' + hex;
+            }
+            System.out.print(hex.toUpperCase() );
+        } 
+        System.out.println("\n<<<<<<hex output end");
+    }
 }
